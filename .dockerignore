@@ -1,0 +1,9 @@
+.idea/
+.git/
+.gitignore
+.dockerignore
+Dockerfile
+node_modules/
+npm-debug.log
+dist/
+HELP.md
