@@ -1,0 +1,108 @@
+name: Build and test via npm, then build and push Docker image
+
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+#      - '.github/**'
+      - 'README.md'
+      - '.gitignore'
+      - '.dockerignore'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 14.x, 16.x, 18.x, 20.x ]
+    steps:
+      - name: Checkout frontend repository
+        uses: actions/checkout@98637d7db679cd12b4ae373378e391551b922539     # v3.5.3
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c   # v3.6.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+
+  test:
+    name: Run Unit Tests
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 14.x, 16.x, 18.x, 20.x ]
+    steps:
+      - name: Checkout frontend repository
+        uses: actions/checkout@98637d7db679cd12b4ae373378e391551b922539     # v3.5.3
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@64ed1c7eab4cce3362f8c340dee64e5eaeef8f7c   # v3.6.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm test
+
+
+  publish_docker_image:
+    name: Build and Push Docker Image to GitHub Container Registry
+    needs: [ build, test ]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write       # For signing images via sigstore/cosign with GitHub OIDC Token
+    steps:
+      - name: Checkout frontend repository
+        uses: actions/checkout@98637d7db679cd12b4ae373378e391551b922539   # v3.5.3
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@d13028333d784fcc802b67ec924bcebe75aa0a5f   # v3.1.0
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc   # v2.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: docker_meta
+        uses: docker/metadata-action@818d4b7b91585d195f67373fd9cb0332e31a7175   # v4.6.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=sha,format=long
+
+      - name: Build and Push container images
+        id: docker_build_and_push
+        uses: docker/build-push-action@2eb1c1961a95fc15694676618e422e8ba1d63825   # v4.1.1
+        with:
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ steps.docker_meta.outputs.tags }}
+
+      - name: Sign the Docker images with GitHub OIDC Token
+        env:
+          DIGEST: ${{ steps.docker_build_and_push.outputs.digest }}
+          TAGS: ${{ steps.docker_meta.outputs.tags }}
+        run: cosign sign --yes "${TAGS}@${DIGEST}"

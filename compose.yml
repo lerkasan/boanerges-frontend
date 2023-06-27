@@ -3,7 +3,7 @@ version: '3'
 services:
 
   frontend:
-    image: lerkasan/boanerges-frontend:latest
+    image: ghcr.io/lerkasan/boanerges-frontend:latest
     restart: always
     read_only: true
     tmpfs:
@@ -24,7 +24,7 @@ services:
       - backend
 
   backend:
-    image: lerkasan/boanerges-backend:latest
+    image: ghcr.io/lerkasan/boanerges-backend:latest
     restart: always
     read_only: true
     tmpfs:

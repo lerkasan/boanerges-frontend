@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json jsconfig.json babel.config.js vue.config.js ./
 COPY ./src ./src
 
-RUN npm install && \
+RUN npm ci && \
     npm run build
 
 
