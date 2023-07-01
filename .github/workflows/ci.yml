@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [ 16.x, 18.x, 20.x ]
+        node-version: [ 18.x, 20.x ]
     steps:
       - name: Checkout frontend repository
         uses: actions/checkout@98637d7db679cd12b4ae373378e391551b922539     # v3.5.3
@@ -46,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [ 16.x, 18.x, 20.x ]
+        node-version: [ 18.x, 20.x ]
     steps:
       - name: Checkout frontend repository
         uses: actions/checkout@98637d7db679cd12b4ae373378e391551b922539     # v3.5.3
