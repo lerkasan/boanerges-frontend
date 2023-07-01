@@ -14,7 +14,7 @@
 import {ref} from "vue";
 
 async function getBooks() {
-    const response = await fetch('http://localhost:8080/api/v1/books');
+    const response = await fetch(process.env.BACKEND_HOST + ':8080/api/v1/books');
 
     if (!response.ok) {
         const message = `An error has occurred: ${response.status}`;

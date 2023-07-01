@@ -69,3 +69,8 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./db_data:/var/lib/mysql
+#    healthcheck:
+#      test: [ "CMD-SHELL", "mysql -h localhost -u  root -p$$MYSQL_ROOT_PASSWORD" ]
+#      interval: 30s
+#      timeout: 20s
+#      retries: 10
