@@ -4,7 +4,7 @@ RUN mkdir /app
 
 WORKDIR /app
 
-COPY package*.json jsconfig.json babel.config.js vue.config.js ./
+COPY package*.json jsconfig.json babel.config.js vue.config.js .env.production ./
 COPY ./src ./src
 
 RUN npm ci && \
