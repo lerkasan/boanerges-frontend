@@ -15,5 +15,6 @@ RUN npm ci && \
 FROM nginx:1.24.0-alpine-slim@sha256:da86ecb516d88a5b0579cec8687a75f974712cb5091560c06ef6c393ea4936ee
 
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
