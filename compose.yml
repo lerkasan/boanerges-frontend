@@ -3,7 +3,7 @@ version: '3'
 services:
 
   frontend:
-    image: ghcr.io/lerkasan/boanerges-frontend:latest
+    image: ghcr.io/lerkasan/boanerges-frontend:${FRONTEND_TAG:-latest} # commit sha from environment variable    aws deploy get-deployment --deployment-id $DEPLOYMENT_ID  --query  ".deploymentInfo.revision.gitHubLocation.commitId" --output text
     restart: always
     read_only: true
     tmpfs:
@@ -18,13 +18,17 @@ services:
       - DAC_OVERRIDE
       - SETGID
       - SETUID
+#    environment:
+#      DOMAIN_NAME: ${DOMAIN_NAME:-lerkasan.net}
     ports:
       - "80:80"
+    networks:
+      app:
     depends_on:
       - backend
 
   backend:
-    image: ghcr.io/lerkasan/boanerges-backend:latest
+    image: ghcr.io/lerkasan/boanerges-backend:${BACKEND_TAG:-latest} # commit sha from environment variable   aws deploy get-deployment --deployment-id $DEPLOYMENT_ID  --query  ".deploymentInfo.revision.gitHubLocation.commitId" --output text
     restart: always
     read_only: true
     tmpfs:
@@ -32,45 +36,14 @@ services:
     cap_drop:
       - ALL
     environment:
-      DB_HOST: ${DB_HOST:-db}
-      DB_PORT: ${DB_PORT:-3306}
-      DB_NAME:
-      DB_USERNAME:
-      DB_PASSWORD:
-      SPRING_SERVER_PORT: ${SPRING_SERVER_PORT:-8080}
-    ports:
-      - "${SPRING_SERVER_PORT}:${SPRING_SERVER_PORT}"
-    depends_on:
-      - database
+      - DB_HOST
+      - DB_PORT=3306
+      - DB_NAME
+      - DB_USERNAME
+      - DB_PASSWORD
+      - SPRING_SERVER_PORT=8080
+    networks:
+      app:
 
-  database:
-    hostname: ${DB_HOST:-db}
-    image: mysql:8.0.33-debian@sha256:8dd2269034dd8680a2d90403977c9604bbaeb0e30364d105340a50241245785c
-    restart: always
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /var/run/mysqld
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - DAC_OVERRIDE
-      - NET_RAW
-      - SETGID
-      - SETUID
-      - SYS_TIME
-      - SYSLOG
-    environment:
-      MYSQL_ROOT_PASSWORD:
-      MYSQL_TCP_PORT: ${DB_PORT:-3306}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - ./db_data:/var/lib/mysql
-#    healthcheck:
-#      test: [ "CMD-SHELL", "mysql -h localhost -u  root -p$$MYSQL_ROOT_PASSWORD" ]
-#      interval: 30s
-#      timeout: 20s
-#      retries: 10
+networks:
+  app:
