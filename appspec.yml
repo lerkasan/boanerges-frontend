@@ -1,0 +1,31 @@
+version: 0.0
+os: linux
+files:
+  - source: compose.yml
+    destination: /home/ubuntu/app/
+permissions:
+  - object: /home/ubuntu/app/
+    pattern: "**"
+    owner: ubuntu
+    group: ubuntu
+hooks:
+  BeforeInstall:
+    - location: infra/aws/scripts/before-install.sh
+      timeout: 300
+      runas: root
+  AfterInstall:
+    - location: infra/aws/scripts/after-install.sh
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: infra/aws/scripts/application-start.sh
+      timeout: 300
+      runas: ubuntu
+  ApplicationStop:
+    - location: infra/aws/scripts/application-stop.sh
+      timeout: 300
+      runas: ubuntu
+  ValidateService:
+    - location: infra/aws/scripts/validate-service.sh
+      timeout: 300
+      runas: ubuntu
