@@ -106,3 +106,24 @@ jobs:
           DIGEST: ${{ steps.docker_build_and_push.outputs.digest }}
           TAGS: ${{ steps.docker_meta.outputs.tags }}
         run: cosign sign --yes "${TAGS}@${DIGEST}"
+
+
+  deploy:
+    name: Deploy to AWS EC2
+    needs: [ publish_docker_image ]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Get AWS Credentials
+        uses: aws-actions/configure-aws-credentials@5fd3084fc36e372ff1fff382a39b10d03659f355   # v2.2.0
+        with:
+          #          role-to-assume: ${{ secrets.PIPELINE_IAM_ROLE }}
+          #          role-session-name: GitHub-Action-Role
+          aws-access-key-id: ${{ secrets.PIPELINE_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PIPELINE_AWS_SECRET_KEY_ID }}
+          aws-region: ${{ env.AWS_REGION }}
+      - run: |
+          aws deploy create-deployment --application-name ${{ env.CODEDEPLOY_APPLICATION }} --deployment-group-name ${{ env.DEPLOYMENT_GROUP }} --github-location repository=$GITHUB_REPOSITORY,commitId=$GITHUB_SHA --ignore-application-stop-failures
